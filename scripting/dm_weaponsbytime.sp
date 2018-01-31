@@ -23,16 +23,7 @@
 #include <sdktools>
 
 
-// Configuration
-#define EVERYTIME 5 // Every X minutes the stage change
-#define EVERYTIME_HS 6 // Every X minutes HS enabled
-#define EVERYTIME_HS_DURATION 2 // Duration in minutes for HS enabled
-// End configuration
-
-
-
-
-#define PLUGIN_VERSION "1.0.1"
+#define PLUGIN_VERSION "1.1"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -58,6 +49,8 @@ int g_iTiempoHS = 0;
 
 ConVar cv_hs;
 
+ConVar cv_everytime, cv_everytime_hs, cv_everytime_hs_duration;
+
 public Plugin:myinfo = 
 {
 	name = "SM DM weapons by time",
@@ -74,6 +67,10 @@ public OnPluginStart()
 	
 	AddCommandListener(Event_Say, "say");
 	AddCommandListener(Event_Say, "say_team");
+	
+	cv_everytime = CreateConVar("sm_weaponsbytime_duration", "5", "Duration for each stage in minutes");
+	cv_everytime_hs = CreateConVar("sm_weaponsbytime_hs", "6", "Every X minutes, enable only hs");
+	cv_everytime_hs_duration = CreateConVar("sm_weaponsbytime_hsduration", "2", "Duration in minutes for only hs");
 	
 	g_weapons = CreateArray(64);
 	
@@ -160,7 +157,7 @@ public Action Timer_Change(Handle hTimer)
 	
 	if(!bhs)
 	{
-		if(g_iTiempoHS >= EVERYTIME_HS*60)
+		if(g_iTiempoHS >= GetConVarInt(cv_everytime_hs)*60)
 		{
 			g_iTiempoHS = 0;
 		
@@ -169,7 +166,7 @@ public Action Timer_Change(Handle hTimer)
 			PrintCenterTextAll("Only HS: Enabled!");
 		}
 	}
-	else if(g_iTiempoHS >= EVERYTIME_HS_DURATION*60)
+	else if(g_iTiempoHS >= GetConVarInt(cv_everytime_hs_duration)*60)
 	{
 		g_iTiempoHS = 0;
 		
@@ -178,9 +175,9 @@ public Action Timer_Change(Handle hTimer)
 		PrintCenterTextAll("Only HS: Disabled!");
 	}
 	
-	if(g_iTiempo < 60*EVERYTIME)
+	if(g_iTiempo < 60*GetConVarInt(cv_everytime))
 	{
-		ShowTimer(60*EVERYTIME-g_iTiempo, thetime, sizeof(thetime));
+		ShowTimer(60*GetConVarInt(cv_everytime)-g_iTiempo, thetime, sizeof(thetime));
 		
 		
 		for (int i = 1; i <= MaxClients; i++) 

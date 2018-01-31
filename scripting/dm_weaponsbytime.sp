@@ -22,10 +22,15 @@
 #include <sourcemod>
 #include <sdktools>
 
-#define EVERYTIME 5 // 4
 
-#define EVERYTIME_HS 6 // 6
-#define EVERYTIME_HS_DURATION 2 // 2
+// Configuration
+#define EVERYTIME 5 // Every X minutes the stage change
+#define EVERYTIME_HS 6 // Every X minutes HS enabled
+#define EVERYTIME_HS_DURATION 2 // Duration in minutes for HS enabled
+// End configuration
+
+
+
 
 #define PLUGIN_VERSION "1.0"
 

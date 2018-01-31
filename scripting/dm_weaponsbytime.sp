@@ -32,11 +32,11 @@
 
 
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.0.1"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
-int iColor[4] =  { 0, 0, 0, 100 };
+//int iColor[4] =  { 0, 0, 0, 100 };
 
 char armas[64];
 
@@ -154,7 +154,9 @@ public Action Timer_Change(Handle hTimer)
 	
 	bool bhs = GetConVarBool(cv_hs);
 	
-	char sBuffer[128], thetime[128];
+	char thetime[128];
+	
+	//char sBuffer[128];
 	
 	if(!bhs)
 	{
@@ -185,13 +187,16 @@ public Action Timer_Change(Handle hTimer)
 			if (IsClientInGame(i) && GetClientTeam(i) > 1 && !IsFakeClient(i))
 			{
 				
-				SetHudTextParamsEx(-1.0, 0.9, 1.1, iColor, {0, 0, 0, 100}, 0, 0.0, 0.0, 0.0);
-				Format(sBuffer, sizeof(sBuffer), "Next weapons in: %s", thetime);
-				ShowHudText(i, 3, sBuffer);
 				
-				SetHudTextParamsEx(-1.0, 0.88, 1.1, iColor, {0, 0, 0, 100}, 0, 0.0, 0.0, 0.0);
-				Format(sBuffer, sizeof(sBuffer), "Only HS: %s", bhs?"Enabled":"Disabled");
-				ShowHudText(i, 4, sBuffer);
+				// SetHudTextParamsEx(-1.0, 0.9, 1.1, iColor, {0, 0, 0, 100}, 0, 0.0, 0.0, 0.0);
+				// Format(sBuffer, sizeof(sBuffer), "Next weapons in: %s", thetime);
+				// ShowHudText(i, 3, sBuffer);
+				
+				//SetHudTextParamsEx(-1.0, 0.88, 1.1, iColor, {0, 0, 0, 100}, 0, 0.0, 0.0, 0.0);
+				//Format(sBuffer, sizeof(sBuffer), "Only HS: %s", bhs?"Enabled":"Disabled");
+				//ShowHudText(i, 4, sBuffer);
+				
+				PrintHintText(i, "Next weapons in: %s\nOnly HS: %s", thetime, bhs ? "Enabled":"Disabled");
 			}
 		return;
 		

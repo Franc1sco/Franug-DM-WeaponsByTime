@@ -24,7 +24,7 @@
 #include <colorvariables>
 
 
-#define PLUGIN_VERSION "2.0.1"
+#define PLUGIN_VERSION "2.0.2"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -281,7 +281,6 @@ MontarMenu()
 			KvGetString(kv, "weapontype", tipo, 64);
 			KvGetString(kv, "flags", flags, 12, "");
 			KvGetString(kv, "weaponentity", entidad, 64);
-			KvGetString(kv, "time", entidad, 64);
 			time = KvGetNum(kv, "time", 0);
 			if(StrEqual(tipo, armas))
 			{
@@ -337,6 +336,7 @@ public int Menu_Handler(Menu menu, MenuAction action, int client, int param2)
 
 			char item[64];
 			GetMenuItem(menu, param2, item, sizeof(item));
+			
 			if(StrEqual(item, "no"))
 				g_show[client] = false;
 			else if (StrEqual(item, "random")) g_random[client] = true;

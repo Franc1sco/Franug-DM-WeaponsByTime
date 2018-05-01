@@ -1,7 +1,7 @@
 /*
 	SM DM weapons by time
 
-	Copyright (C) 2017 Francisco 'Franc1sco' García
+	Copyright (C) 2017-2018 Francisco 'Franc1sco' García
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -21,9 +21,10 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <colorvariables>
 
 
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "2.0"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -41,7 +42,7 @@ bool g_random[MAXPLAYERS + 1];
 
 int g_contador;
 
-Handle g_weapons;
+Handle g_weapons, g_flags, g_types;
 
 int g_iTiempo = 0;
 
@@ -49,7 +50,7 @@ int g_iTiempoHS = 0;
 
 ConVar cv_hs;
 
-ConVar cv_everytime, cv_everytime_hs, cv_everytime_hs_duration;
+ConVar cv_everytime, cv_everytime_hs, cv_everytime_hs_duration, cv_countdown;
 
 public Plugin:myinfo = 
 {
@@ -68,11 +69,14 @@ public OnPluginStart()
 	AddCommandListener(Event_Say, "say");
 	AddCommandListener(Event_Say, "say_team");
 	
-	cv_everytime = CreateConVar("sm_weaponsbytime_duration", "5", "Duration for each stage in minutes");
+	cv_everytime = CreateConVar("sm_weaponsbytime_duration", "5", "Duration for each stage in minutes by default");
 	cv_everytime_hs = CreateConVar("sm_weaponsbytime_hs", "6", "Every X minutes, enable only hs");
 	cv_everytime_hs_duration = CreateConVar("sm_weaponsbytime_hsduration", "2", "Duration in minutes for only hs");
+	cv_countdown = CreateConVar("sm_weaponsbytime_countdown", "10", "Start a countdown in the chat when only X seconds for next weapons. (0 = disabled)");
 	
 	g_weapons = CreateArray(64);
+	g_types = CreateArray(64);
+	g_flags = CreateArray(12);
 	
 	CreateTimer(1.0, Timer_Change, _, TIMER_REPEAT);
 	
@@ -102,18 +106,20 @@ public Action Event_Say(int client, const char[] command, int argc)
 public OnMapStart()
 {
 	g_iTiempoHS = 0;
-	g_contador = 1;
+	g_contador = 0;
+	GetTypes();
 	SetConVarBool(cv_hs, false);
-	strcopy(armas, 64, "Pistol");
+	GetArrayString(g_types, g_contador, armas, 64);
 	MontarMenu();
 }
 
 public void Event_Start(Event event, const char[] name, bool dontBroadcast)
 {
 	g_iTiempoHS = 0;
-	g_contador = 1;
+	g_contador = 0;
+	GetTypes();
 	SetConVarBool(cv_hs, false);
-	strcopy(armas, 64, "Pistol");
+	GetArrayString(g_types, g_contador, armas, 64);
 	MontarMenu();
 }
 
@@ -177,6 +183,16 @@ public Action Timer_Change(Handle hTimer)
 	
 	if(g_iTiempo < 60*GetConVarInt(cv_everytime))
 	{
+		int countdown = GetConVarInt(cv_countdown);
+		
+		if(countdown != 0)
+		{
+			int faltan = (60 * GetConVarInt(cv_everytime)) - g_iTiempo;
+			
+			if(faltan <= countdown)
+				CPrintToChatAll("{red}Next weapons in: %i seconds", faltan);
+		}
+		
 		ShowTimer(60*GetConVarInt(cv_everytime)-g_iTiempo, thetime, sizeof(thetime));
 		
 		
@@ -200,26 +216,9 @@ public Action Timer_Change(Handle hTimer)
 	}
 	
 	g_contador++;
-	if (g_contador > 6)g_contador = 1;
+	if (g_contador >= GetArraySize(g_types))g_contador = 0;
 	
-	switch (g_contador)
-	{
-		case 1:
-			Format(armas, 64, "Pistol");
-		case 2:
-			Format(armas, 64, "Shotgun");
-		case 3:
-			Format(armas, 64, "SMG");
-		case 4:
-			Format(armas, 64, "Rifle");
-		case 5:
-			Format(armas, 64, "Sniper");
-		case 6:
-			Format(armas, 64, "Machine Gun");
-		default:
-			Format(armas, 64, "Pistol");
-		
-	}
+	GetArrayString(g_types, g_contador, armas, 64);
 	
 	MontarMenu();
 	for(new i = 1; i <= MaxClients; i++)
@@ -268,7 +267,9 @@ MontarMenu()
 	menu_weapons = new Menu(Menu_Handler);
 	
 	ClearArray(g_weapons);
-	
+	ClearArray(g_flags);
+	int time;
+	char flags[12];
 	SetMenuTitle(menu_weapons, armas);
 	AddMenuItem(menu_weapons, "no", "Dont show more");
 	AddMenuItem(menu_weapons, "random", "Random");
@@ -278,17 +279,46 @@ MontarMenu()
 		{
 			KvGetSectionName(kv, nombre, 64);
 			KvGetString(kv, "weapontype", tipo, 64);
+			KvGetString(kv, "flags", flags, 12, "");
 			KvGetString(kv, "weaponentity", entidad, 64);
+			KvGetString(kv, "time", entidad, 64);
+			time = KvGetNum(kv, "time", 0);
 			if(StrEqual(tipo, armas))
 			{
+				if(time != 0)
+					SetConVarInt(cv_everytime, time);
+					
+				if(!StrEqual(flags, "", false))
+					Format(nombre, 64, "%s (VIP)", nombre);
+					
 				AddMenuItem(menu_weapons, entidad, nombre);
 				PushArrayString(g_weapons, entidad);
+				PushArrayString(g_flags, flags);
 			}
 			
 		} while (KvGotoNextKey(kv));
 	}
 	KvRewind(kv);
 	SetMenuExitBackButton(menu_weapons, true);
+}
+
+GetTypes()
+{	
+	char tipo[64];
+	ClearArray(g_types);
+	if(KvGotoFirstSubKey(kv))
+	{
+		do
+		{
+			KvGetString(kv, "weapontype", tipo, 64);
+			
+			if(FindStringInArray(g_types, tipo) == -1)
+			{
+				PushArrayString(g_types, tipo);
+			}	
+		} while (KvGotoNextKey(kv));
+	}
+	KvRewind(kv);
 }
 
 public int Menu_Handler(Menu menu, MenuAction action, int client, int param2)
@@ -304,6 +334,16 @@ public int Menu_Handler(Menu menu, MenuAction action, int client, int param2)
 				g_show[client] = false;
 			else if (StrEqual(item, "random")) g_random[client] = true;
 			else{
+				
+				char flags[12];
+				GetArrayString(g_flags, FindStringInArray(g_weapons, item), flags, 12);
+				if(!HasPermission(client, flags))
+				{
+					PrintToChat(client, "You dont have access to use this weapon!");
+					return;
+				}
+				
+				
 				g_random[client] = false;
 				strcopy(g_arma[client], 64, item);
 			}
@@ -374,3 +414,36 @@ int ShowTimer(int Time, char[] buffer,int sizef)
 		Format(buffer, sizef, "%d second%s", g_iSeconds,g_iSeconds!=1?"s":"");
 	}
 }
+
+stock bool HasPermission(int iClient, char[] flagString) 
+{
+	if (StrEqual(flagString, "")) 
+	{
+		return true;
+	}
+	
+	AdminId admin = GetUserAdmin(iClient);
+	
+	if (admin != INVALID_ADMIN_ID)
+	{
+		int count, found, flags = ReadFlagString(flagString);
+		for (int i = 0; i <= 20; i++) 
+		{
+			if (flags & (1<<i)) 
+			{
+				count++;
+				
+				if (GetAdminFlag(admin, view_as<AdminFlag>(i))) 
+				{
+					found++;
+				}
+			}
+		}
+
+		if (count == found) {
+			return true;
+		}
+	}
+
+	return false;
+} 

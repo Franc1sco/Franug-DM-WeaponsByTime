@@ -1,19 +1,11 @@
-// Valid weapontypes
-//
-// Pistol
-// Shotgun
-// SMG
-// Rifle
-// Sniper
-// Machine Gun
-
-
 "weapons"
 {
 	"Glock"
 	{
 		"weaponentity"		"weapon_glock"
-		"weapontype"		"Pistol"
+		"weapontype"		"Pistol" // you can make custom categories
+		"time"			"8" // You can change the time on minutes for this category
+		"flags"			"b" // You can make this weapon only for VIPs
 	}
 
 	"P2000"

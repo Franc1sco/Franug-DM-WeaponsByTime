@@ -8,4 +8,5 @@ Require a DM plugin with the weapons menu disabled. Like this https://www.dropbo
 sm_weaponsbytime_duration 5 // Duration for each stage in minutes
 sm_weaponsbytime_hs 6 // Every X minutes, enable only hs
 sm_weaponsbytime_hsduration 2 // Duration in minutes for only hs
+sm_weaponsbytime_countdown 10 // Start a countdown in the chat when only X seconds for next weapons. (0 = disabled)
 ```

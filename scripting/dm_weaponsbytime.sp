@@ -24,7 +24,7 @@
 #include <colorvariables>
 
 
-#define PLUGIN_VERSION "2.0"
+#define PLUGIN_VERSION "2.0.1"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -304,6 +304,13 @@ MontarMenu()
 
 GetTypes()
 {	
+	BuildPath(Path_SM, sConfig, PLATFORM_MAX_PATH, "configs/franug_dmweapons.txt");
+	
+	if(kv != INVALID_HANDLE) CloseHandle(kv);
+	
+	kv = CreateKeyValues("weapons");
+	FileToKeyValues(kv, sConfig);
+	
 	char tipo[64];
 	ClearArray(g_types);
 	if(KvGotoFirstSubKey(kv))

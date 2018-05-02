@@ -24,7 +24,7 @@
 #include <colorvariables>
 
 
-#define PLUGIN_VERSION "2.0.2"
+#define PLUGIN_VERSION "2.1"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -195,6 +195,8 @@ public Action Timer_Change(Handle hTimer)
 		
 		ShowTimer(60*GetConVarInt(cv_everytime)-g_iTiempo, thetime, sizeof(thetime));
 		
+		char armas2[64];
+		GetArrayString(g_types, g_contador+1>=GetArraySize(g_types)?0:g_contador+1, armas2, 64);
 		
 		for (int i = 1; i <= MaxClients; i++) 
 			if (IsClientInGame(i) && GetClientTeam(i) > 1 && !IsFakeClient(i))
@@ -209,7 +211,7 @@ public Action Timer_Change(Handle hTimer)
 				//Format(sBuffer, sizeof(sBuffer), "Only HS: %s", bhs?"Enabled":"Disabled");
 				//ShowHudText(i, 4, sBuffer);
 				
-				PrintHintText(i, "Next weapons in: %s\nOnly HS: %s", thetime, bhs ? "Enabled":"Disabled");
+				PrintHintText(i, "Current: %s\n%s in: %s\nOnly HS: %s",armas, armas2,  thetime, bhs ? "Enabled":"Disabled");
 			}
 		return;
 		
@@ -406,19 +408,19 @@ int ShowTimer(int Time, char[] buffer,int sizef)
 	}
 	if(g_iHours >= 1)
 	{
-		if(g_iMinutes == 0 && g_iSeconds == 0) Format(buffer, sizef, "%d hour%s", g_iHours,g_iHours!=1?"s":"");
-		else if(g_iMinutes > 0 && g_iSeconds == 0) Format(buffer, sizef, "%d hour%s and %d minute%s", g_iHours,g_iHours!=1?"s":"", g_iMinutes,g_iMinutes!=1?"s":"");
-		else Format(buffer, sizef, "%d hour%s, %d minute%s and %d second%s", g_iHours,g_iHours!=1?"s":"", g_iMinutes,g_iMinutes!=1?"s":"", g_iSeconds,g_iSeconds!=1?"s":"");
+		if(g_iMinutes == 0 && g_iSeconds == 0) Format(buffer, sizef, "%d hour%s", g_iHours);
+		else if(g_iMinutes > 0 && g_iSeconds == 0) Format(buffer, sizef, "%d h %d min", g_iHours, g_iMinutes);
+		else Format(buffer, sizef, "%d h %d min %d sec", g_iHours, g_iMinutes, g_iSeconds);
 	}
 	else if(g_iMinutes >= 1)
 	{
 		if(g_iSeconds == 0)
-			Format(buffer, sizef, "%d minute%s", g_iMinutes,g_iMinutes!=1?"s":"");
-		else Format(buffer, sizef, "%d minute%s and %d second%s", g_iMinutes,g_iMinutes!=1?"s":"", g_iSeconds,g_iSeconds!=1?"s":"");
+			Format(buffer, sizef, "%d min", g_iMinutes);
+		else Format(buffer, sizef, "%d min %d sec", g_iMinutes, g_iSeconds);
 	}
 	else
 	{
-		Format(buffer, sizef, "%d second%s", g_iSeconds,g_iSeconds!=1?"s":"");
+		Format(buffer, sizef, "%d sec", g_iSeconds);
 	}
 }
 

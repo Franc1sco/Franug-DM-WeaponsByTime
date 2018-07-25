@@ -24,7 +24,7 @@
 #include <colorvariables>
 
 
-#define PLUGIN_VERSION "2.1"
+#define PLUGIN_VERSION "2.2"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -69,6 +69,8 @@ public OnPluginStart()
 	AddCommandListener(Event_Say, "say");
 	AddCommandListener(Event_Say, "say_team");
 	
+	AddCommandListener(BlockCommand, "drop");
+	
 	cv_everytime = CreateConVar("sm_weaponsbytime_duration", "5", "Duration for each stage in minutes by default");
 	cv_everytime_hs = CreateConVar("sm_weaponsbytime_hs", "6", "Every X minutes, enable only hs");
 	cv_everytime_hs_duration = CreateConVar("sm_weaponsbytime_hsduration", "2", "Duration in minutes for only hs");
@@ -81,6 +83,12 @@ public OnPluginStart()
 	CreateTimer(1.0, Timer_Change, _, TIMER_REPEAT);
 	
 	cv_hs = FindConVar("mp_damage_headshot_only");
+}
+
+public Action BlockCommand(int client, const char[] command, int argc)
+{
+	PrintCenterText(client, "You cant drop your weapon on DM!");
+	return Plugin_Handled;
 }
 
 public Action Event_Say(int client, const char[] command, int argc)
@@ -137,6 +145,8 @@ public Action GiveWeapons(Handle timer, any client)
 	if(!IsPlayerAlive(client))
 		return;
 		
+	StripAllPlayerWeapons(client);
+	
 	if (g_random[client])Aleatorio(client);
 	else GivePlayerItem(client, g_arma[client]);
 	
@@ -349,6 +359,8 @@ public int Menu_Handler(Menu menu, MenuAction action, int client, int param2)
 				if(!HasPermission(client, flags))
 				{
 					PrintToChat(client, "You dont have access to use this weapon!");
+					
+					DisplayMenuAtItem(menu_weapons, client, GetMenuSelectionPosition(), 0);
 					return;
 				}
 				

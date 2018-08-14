@@ -24,7 +24,7 @@
 #include <colorvariables>
 
 
-#define PLUGIN_VERSION "2.2"
+#define PLUGIN_VERSION "2.2.1"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -146,6 +146,7 @@ public Action GiveWeapons(Handle timer, any client)
 		return;
 		
 	StripAllPlayerWeapons(client);
+	GivePlayerItem(client, "weapon_knife");
 	
 	if (g_random[client])Aleatorio(client);
 	else GivePlayerItem(client, g_arma[client]);

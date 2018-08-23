@@ -20,11 +20,12 @@
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <cstrike>
 #include <sdktools>
 #include <colorvariables>
 
 
-#define PLUGIN_VERSION "2.2.1"
+#define PLUGIN_VERSION "2.3"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -144,9 +145,9 @@ public Action GiveWeapons(Handle timer, any client)
 	g_hTimer[client] = INVALID_HANDLE;
 	if(!IsPlayerAlive(client))
 		return;
-		
+	
 	StripAllPlayerWeapons(client);
-	GivePlayerItem(client, "weapon_knife");
+	if(!GetConVarBool(cv_hs)) GivePlayerItem(client, "weapon_knife");
 	
 	if (g_random[client])Aleatorio(client);
 	else GivePlayerItem(client, g_arma[client]);
@@ -180,7 +181,10 @@ public Action Timer_Change(Handle hTimer)
 		
 			SetConVarBool(cv_hs, true);
 			
+			bhs = true;
+			
 			PrintCenterTextAll("Only HS: Enabled!");
+			
 		}
 	}
 	else if(g_iTiempoHS >= GetConVarInt(cv_everytime_hs_duration)*60)
@@ -190,6 +194,8 @@ public Action Timer_Change(Handle hTimer)
 		SetConVarBool(cv_hs, false);
 		
 		PrintCenterTextAll("Only HS: Disabled!");
+		
+		bhs = false;
 	}
 	
 	if(g_iTiempo < 60*GetConVarInt(cv_everytime))
@@ -208,12 +214,24 @@ public Action Timer_Change(Handle hTimer)
 		
 		char armas2[64];
 		GetArrayString(g_types, g_contador+1>=GetArraySize(g_types)?0:g_contador+1, armas2, 64);
-		
+		int weapon;
 		for (int i = 1; i <= MaxClients; i++) 
-			if (IsClientInGame(i) && GetClientTeam(i) > 1 && !IsFakeClient(i))
+			if (IsClientInGame(i) && GetClientTeam(i) > 1)
 			{
-				
-				
+				if(IsPlayerAlive(i))
+				{
+					if(bhs)
+					{
+						while((weapon = GetPlayerWeaponSlot(i, CS_SLOT_KNIFE)) != -1)
+						{
+							RemovePlayerItem(i, weapon);
+							AcceptEntityInput(weapon, "Kill");
+						}
+					}
+					else if(GetPlayerWeaponSlot(i, CS_SLOT_KNIFE) == -1)
+						GivePlayerItem(i, "weapon_knife");
+					
+				}
 				// SetHudTextParamsEx(-1.0, 0.9, 1.1, iColor, {0, 0, 0, 100}, 0, 0.0, 0.0, 0.0);
 				// Format(sBuffer, sizeof(sBuffer), "Next weapons in: %s", thetime);
 				// ShowHudText(i, 3, sBuffer);
@@ -222,7 +240,8 @@ public Action Timer_Change(Handle hTimer)
 				//Format(sBuffer, sizeof(sBuffer), "Only HS: %s", bhs?"Enabled":"Disabled");
 				//ShowHudText(i, 4, sBuffer);
 				
-				PrintHintText(i, "Current: %s\n%s in: %s\nOnly HS: %s",armas, armas2,  thetime, bhs ? "Enabled":"Disabled");
+				if(!IsFakeClient(i))
+					PrintHintText(i, "Current: %s\n%s in: %s\nOnly HS: %s",armas, armas2,  thetime, bhs ? "Enabled":"Disabled");
 			}
 		return;
 		
@@ -232,7 +251,6 @@ public Action Timer_Change(Handle hTimer)
 	if (g_contador >= GetArraySize(g_types))g_contador = 0;
 	
 	GetArrayString(g_types, g_contador, armas, 64);
-	
 	MontarMenu();
 	for(new i = 1; i <= MaxClients; i++)
 		if(IsClientInGame(i))
@@ -240,7 +258,8 @@ public Action Timer_Change(Handle hTimer)
 			g_random[i] = true;
 			g_show[i] = true;
 			StripAllPlayerWeapons(i);
-			GivePlayerItem(i, "weapon_knife");
+			
+			if(!GetConVarBool(cv_hs)) GivePlayerItem(i, "weapon_knife");
 			Aleatorio(i);
 			
 			if(!IsFakeClient(i)){
@@ -299,7 +318,7 @@ MontarMenu()
 			{
 				if(time != 0)
 					SetConVarInt(cv_everytime, time);
-					
+				
 				if(!StrEqual(flags, "", false))
 					Format(nombre, 64, "%s (VIP)", nombre);
 					

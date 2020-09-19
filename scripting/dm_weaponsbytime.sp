@@ -25,7 +25,7 @@
 #include <colorvariables>
 
 
-#define PLUGIN_VERSION "2.3"
+#define PLUGIN_VERSION "2.3.1"
 
 char sConfig[PLATFORM_MAX_PATH];
 Handle kv;
@@ -137,7 +137,7 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	
 	CloseTimer(client);
-	g_hTimer[client] = CreateTimer(0.5, GiveWeapons, client);
+	g_hTimer[client] = CreateTimer(0.0, GiveWeapons, client);
 }
 
 public Action GiveWeapons(Handle timer, any client)
